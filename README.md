@@ -80,10 +80,10 @@ logosctl call storage_module manifests | jq -r '.result.value[0].cid'
 
 Paste the CID into step 7. The page keeps a list of your contributions in this browser's local storage.
 
-The reference knowledge base published from the Pramana node (1,055 papers across seven topics) has the CID `zDvZRwzm9SDY3WQvdd87mQPz1xquMwQELC18qdPVCRUQ9f4hZPtq`. To fetch it:
+The reference knowledge base published from the Pramana node (1,055 papers across seven topics) has the CID `zDvZRwzm1sq9mZA6qVdigHnzPFos7zbzH4QEukk3VLMjhZTxDnGB`. To fetch it:
 
 ```
-logosctl call storage_module downloadToUrl "zDvZRwzm9SDY3WQvdd87mQPz1xquMwQELC18qdPVCRUQ9f4hZPtq" "$PWD/pramana_snapshot.json" false 65536 false false
+logosctl call storage_module downloadToUrl "zDvZRwzm1sq9mZA6qVdigHnzPFos7zbzH4QEukk3VLMjhZTxDnGB" "$PWD/pramana_snapshot.json" false 65536 false false
 ```
 
 ## Privacy
