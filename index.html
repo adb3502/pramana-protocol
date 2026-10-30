@@ -642,7 +642,8 @@ try { if (localStorage.getItem('pramana-lens') === 'raw') setLens('raw'); } catc
 // ---------- AI layer: one interface, two backends ----------
 // artifact build: the viewer's own Claude via the `sample` capability; standalone build: the user's own Anthropic key (BYOK).
 const AI = {mode: null, ready: false, sample: null, key: null};
-const RELAY = 'https://belfast-handle-stewart-yamaha.trycloudflare.com';
+let RELAY = 'https://identify-sensors-screensaver-homeless.trycloudflare.com';
+fetch('relay.json', {cache: 'no-store'}).then(r => r.json()).then(j => { if (j && /^https:\/\//.test(j.relay)) RELAY = j.relay; }).catch(() => {});
 async function aiInit() {
   if (BUILD === 'artifact') {
     try { AI.sample = window.claude && window.claude.use ? await window.claude.use('sample') : null; } catch (e) { AI.sample = null; }
