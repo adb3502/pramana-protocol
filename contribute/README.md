@@ -2,7 +2,7 @@
 
 *pramāṇa* (Sanskrit): a valid means of knowing.
 
-Pramana traces claims back to the numbers they rest on. This repository is a static web page that runs the Pramana extraction protocol in your browser, on any topic, with your own model key. It is hosted at <https://adb3502.github.io/pramana-protocol/>.
+Pramana is an open evidence graph built from research papers: every estimate a paper reports, stored with the sentence or table it came from. This repository is a static web page that runs the Pramana extraction protocol in your browser, on any topic, with your own model key. It is hosted at <https://adb3502.github.io/pramana-protocol/>.
 
 The full pipeline (Python, batch ingestion, Basecamp modules) lives at <https://github.com/adb3502/pramana>.
 
