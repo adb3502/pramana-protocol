@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pramana protocol</title>
+<meta name="description" content="Run the Pramana extraction pipeline in your browser with your own model key: two independent readers, field-by-field agreement, and a content-addressed bundle for Logos Storage.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%2318301F'/%3E%3Crect x='7' y='17' width='18' height='6' fill='%23F7D678'/%3E%3Cpath d='M10 8h8a5 5 0 0 1 0 10h-8z' fill='none' stroke='%23E6E8E3' stroke-width='2.4'/%3E%3Cpath d='M10 7v19' stroke='%23E6E8E3' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top">Pramana protocol<span>pramana/0.1</span></a>
+    <span class="mode" id="modeBadge">Live</span>
+    <div class="ledger" id="ledger" aria-live="polite">
+      <span>calls <b id="lgCalls">0</b></span>
+      <span>tokens <b id="lgIn">0</b> in / <b id="lgOut">0</b> out</span>
+      <span>est. cost <b id="lgCost">$0.000</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+  <nav class="rail" aria-label="Protocol steps">
+    <ol id="railList">
+      <li data-step="1"><a href="#s1"><span class="n">01</span>Keys</a></li>
+      <li data-step="2"><a href="#s2"><span class="n">02</span>Topic</a></li>
+      <li data-step="3"><a href="#s3"><span class="n">03</span>Design</a></li>
+      <li data-step="4"><a href="#s4"><span class="n">04</span>Papers</a></li>
+      <li data-step="5"><a href="#s5"><span class="n">05</span>Extract</a></li>
+      <li data-step="6"><a href="#s6"><span class="n">06</span>Agree</a></li>
+      <li data-step="7"><a href="#s7"><span class="n">07</span>Publish</a></li>
+      <li data-step="8"><a href="#browse"><span class="n">--</span>Knowledge base</a></li>
+    </ol>
+    <p class="rail-note">Everything on this page runs in your browser. There is no Pramana server.</p>
+  </nav>
+
+  <main>
+    <section class="intro">
+      <p class="kicker">Open extraction protocol &middot; bring your own key</p>
+      <p style="margin:0 0 12px"><a href="../">Search the Pramana knowledge base</a></p>
+      <h1>Trace a claim back to the numbers it rests on</h1>
+      <p class="lede">Pick a topic and this page runs the Pramana extraction pipeline on open papers, using your own model key. Two readers extract each paper independently. Fields they agree on are kept, each with a pointer to the sentence it came from, and you can publish the result as a bundle on Logos Storage.</p>
+      <div class="intro-actions">
+        <button class="btn" type="button" id="demoBtn">Run the demo without a key</button>
+        <a class="btn ghost" href="#s1">Start with your own key</a>
+        <a class="btn link" href="https://github.com/adb3502/pramana" target="_blank" rel="noopener">Pipeline source on GitHub</a>
+      </div>
+      <p class="facts">The data layer holds only what each paper reported. Interpretations live in separate signed lenses. Every record carries a pin: SHA-256 hashes of the schema and prompts, plus the model IDs that produced it.</p>
+      <div class="banner" id="demoBanner" hidden>
+        <p><strong>Demo mode.</strong> The design, the two papers and both readers' outputs are pre-recorded, so nothing is sent anywhere and nothing is charged. The comparison, hashing and bundle steps run for real.</p>
+        <button class="btn small ghost" type="button" id="exitDemoBtn">Leave demo</button>
+      </div>
+    </section>
+
+    <!-- 1 Keys -->
+    <section class="step" id="s1" aria-labelledby="h1k">
+      <div class="step-head">
+        <span class="step-num">01</span>
+        <h2 id="h1k">Keys</h2>
+        <p class="sub">Choose a model provider and paste a key. Reader A and reader B should differ in model or temperature so their errors are less likely to coincide.</p>
+      </div>
+      <div class="step-body">
+        <fieldset>
+          <legend>Provider</legend>
+          <div class="seg" role="radiogroup">
+            <label><input type="radio" name="provider" value="anthropic" checked><span>Anthropic</span></label>
+            <label><input type="radio" name="provider" value="openrouter"><span>OpenRouter</span></label>
+            <label><input type="radio" name="provider" value="compatible"><span>Jev or OpenAI-compatible</span></label>
+          </div>
+        </fieldset>
+
+        <div class="field" id="baseUrlField" hidden>
+          <label for="baseUrl">Base URL</label>
+          <input type="url" id="baseUrl" class="mono" placeholder="https://your-endpoint.example/v1" autocomplete="off" spellcheck="false">
+          <p class="hint">The page appends <code>/chat/completions</code> unless the URL already ends with it. The endpoint has to allow requests from a browser (CORS).</p>
+        </div>
+
+        <div class="field">
+          <label for="apiKey">API key</label>
+          <div class="inline">
+            <input type="password" id="apiKey" class="mono" autocomplete="off" spellcheck="false" placeholder="sk-ant-...">
+            <button class="btn ghost small" type="button" id="toggleKey" aria-pressed="false">Show</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="mDesign">Design model</label>
+            <input type="text" id="mDesign" class="mono" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="mJudge">Judge model</label>
+            <input type="text" id="mJudge" class="mono" spellcheck="false" autocomplete="off">
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label for="mA">Reader A model</label>
+            <input type="text" id="mA" class="mono" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="tA">Reader A temperature</label>
+            <input type="number" id="tA" min="0" max="1" step="0.1" value="0">
+          </div>
+          <div class="field">
+            <label for="mB">Reader B model</label>
+            <input type="text" id="mB" class="mono" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="tB">Reader B temperature</label>
+            <input type="number" id="tB" min="0" max="1" step="0.1" value="0.7">
+          </div>
+        </div>
+
+        <label class="check"><input type="checkbox" id="rememberKey"> Remember this key and these settings on this device (stored in this browser's local storage)</label>
+
+        <p class="note privacy">Your key goes from this page straight to the provider you chose, and nowhere else. There is no Pramana server in between. Unless you tick the box above, the key lives only in this tab's memory and is gone when you close it.</p>
+
+        <div class="actions">
+          <button class="btn ghost" type="button" id="testKeyBtn">Check the key</button>
+          <button class="btn link" type="button" id="resetModelsBtn">Reset model IDs to defaults</button>
+        </div>
+        <p class="status" id="keyStatus" role="status"></p>
+      </div>
+    </section>
+
+    <!-- 2 Topic -->
+    <section class="step" id="s2" aria-labelledby="h2t">
+      <div class="step-head">
+        <span class="step-num">02</span>
+        <h2 id="h2t">Topic</h2>
+        <p class="sub">Type a topic or a claim you have seen. The protocol will look for open papers that measured it.</p>
+      </div>
+      <div class="step-body">
+        <div class="field">
+          <label for="topic" class="visually-hidden">Topic or claim</label>
+          <input type="text" id="topic" class="topic-input" placeholder="AI data center water use" autocomplete="off">
+        </div>
+        <div class="examples">
+          <span class="label">Try</span>
+          <button class="ex" type="button" data-topic="AI data center water use">AI data center water use</button>
+          <button class="ex" type="button" data-topic="creatine and cognition">creatine and cognition</button>
+          <button class="ex" type="button" data-topic="coffee and atrial fibrillation">coffee and atrial fibrillation</button>
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" id="designBtn">Design the protocol</button>
+          <button class="btn link" type="button" id="coreOnlyBtn">Skip the design call and use the core schema</button>
+        </div>
+        <p class="status" id="topicStatus" role="status"></p>
+      </div>
+    </section>
+
+    <!-- 3 Design -->
+    <section class="step" id="s3" aria-labelledby="h3d">
+      <div class="step-head">
+        <span class="step-num">03</span>
+        <h2 id="h3d">Design</h2>
+        <p class="sub">The design model proposes search queries and topic-specific fields on top of the core claim fields. Review and edit them before anything runs. The pin below changes whenever you do.</p>
+      </div>
+      <div class="step-body">
+        <p class="gate">Waiting for a topic.</p>
+        <div id="designOut" hidden>
+          <p class="note" id="designNote" hidden></p>
+          <div class="field">
+            <label for="queries">Search queries, one per line (at most 4)</label>
+            <textarea id="queries" class="code" rows="4" spellcheck="false"></textarea>
+          </div>
+          <div class="field">
+            <label for="schema">Extraction schema (JSON)</label>
+            <textarea id="schema" class="code" rows="16" spellcheck="false"></textarea>
+            <p class="hint">Core fields follow the Pramana claim model: an assertion (who said it, the quote) kept apart from the proposition (subject, outcome, measure, relation, direction, magnitude, population, conditions, modality). Add or remove fields under <code>topic_fields</code>.</p>
+            <p class="status" id="schemaStatus" role="status"></p>
+          </div>
+          <h3 class="minor">Pin</h3>
+          <p class="hint" style="margin-top:0">Recorded with every output so anyone can rerun the same protocol and compare.</p>
+          <dl class="pin" id="pinView"></dl>
+        </div>
+        <div class="log" id="designLog"></div>
+        <div class="errbox" id="designErr" role="alert"></div>
+      </div>
+    </section>
+
+    <!-- 4 Papers -->
+    <section class="step" id="s4" aria-labelledby="h4p">
+      <div class="step-head">
+        <span class="step-num">04</span>
+        <h2 id="h4p">Papers</h2>
+        <p class="sub">Open-access works from OpenAlex and Europe PMC. Where Europe PMC holds the full text, the readers get Methods, Results and tables; otherwise they read the abstract, and the record says so.</p>
+      </div>
+      <div class="step-body">
+        <p class="gate">Waiting for a design.</p>
+        <div class="grid3">
+          <div class="field">
+            <label for="perQuery">Results per query and source</label>
+            <select id="perQuery">
+              <option value="5">5</option>
+              <option value="8" selected>8</option>
+              <option value="12">12</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" id="searchBtn">Find papers</button>
+        </div>
+        <div class="field" style="margin-top:18px">
+          <label for="addId">Add a specific paper by DOI or PMCID</label>
+          <div class="inline">
+            <input type="text" id="addId" class="mono" placeholder="10.1038/... or PMC1234567" autocomplete="off" spellcheck="false">
+            <button class="btn ghost small" type="button" id="addIdBtn">Add</button>
+          </div>
+        </div>
+        <div class="log" id="searchLog"></div>
+        <div class="errbox" id="searchErr" role="alert"></div>
+        <div id="paperTools" hidden>
+          <p class="counter" id="selCount"></p>
+          <div class="actions">
+            <button class="btn link" type="button" id="selFirst5">Select the first 5</button>
+            <button class="btn link" type="button" id="selNone">Clear selection</button>
+          </div>
+        </div>
+        <ul class="papers" id="paperList"></ul>
+      </div>
+    </section>
+
+    <!-- 5 Extract -->
+    <section class="step" id="s5" aria-labelledby="h5e">
+      <div class="step-head">
+        <span class="step-num">05</span>
+        <h2 id="h5e">Extract twice</h2>
+        <p class="sub">Reader A and reader B each read every selected paper on their own and return strict JSON with verbatim quotes. Neither sees the other's output.</p>
+      </div>
+      <div class="step-body">
+        <p class="gate">Select at least one paper.</p>
+        <p class="counter" id="estimate"></p>
+        <div class="actions">
+          <button class="btn" type="button" id="extractBtn">Run both readers</button>
+          <button class="btn ghost" type="button" id="stopBtn" hidden>Stop</button>
+        </div>
+        <table class="prog" id="progTable" hidden>
+          <thead><tr><th>Paper</th><th>Text</th><th>Reader A</th><th>Reader B</th></tr></thead>
+          <tbody id="progBody"></tbody>
+        </table>
+        <div class="log" id="extractLog"></div>
+        <div class="errbox" id="extractErr" role="alert"></div>
+      </div>
+    </section>
+
+    <!-- 6 Agree -->
+    <section class="step" id="s6" aria-labelledby="h6a">
+      <div class="step-head">
+        <span class="step-num">06</span>
+        <h2 id="h6a">Agreement</h2>
+        <p class="sub">The two readings are compared field by field with fixed rules: normalized text match, 1% tolerance on numbers, and a check that every quote actually occurs in the text the readers saw. Disagreements go to a judge model or to you.</p>
+      </div>
+      <div class="step-body">
+        <p class="gate">Waiting for extractions.</p>
+        <div id="agreeTop" hidden>
+          <div class="agree-summary" id="agreeSummary"></div>
+          <div class="actions">
+            <button class="btn" type="button" id="judgeAllBtn">Send disputes to the judge</button>
+          </div>
+          <p class="hint" id="judgeHint"></p>
+        </div>
+        <div class="log" id="judgeLog"></div>
+        <div class="errbox" id="judgeErr" role="alert"></div>
+        <div id="agreeList"></div>
+      </div>
+    </section>
+
+    <!-- 7 Publish -->
+    <section class="step" id="s7" aria-labelledby="h7p">
+      <div class="step-head">
+        <span class="step-num">07</span>
+        <h2 id="h7p">Publish</h2>
+        <p class="sub">Each paper becomes a protocol record. The records and a manifest form a bundle, and the bundle's SHA-256 is part of its file name. Download it, add it to Logos Storage from your own node, and paste the content ID back here.</p>
+      </div>
+      <div class="step-body">
+        <p class="gate">Waiting for agreement results.</p>
+        <div class="field" style="max-width:360px">
+          <label for="handle">Contributor handle (optional)</label>
+          <input type="text" id="handle" autocomplete="off" spellcheck="false" placeholder="e.g. adb">
+        </div>
+        <div id="bundleOut" hidden>
+          <div class="bundle-box">
+            <dl class="kv" id="bundleKv"></dl>
+            <div class="actions" style="margin-top:12px">
+              <button class="btn" type="button" id="downloadBtn">Download bundle (.json)</button>
+            </div>
+          </div>
+          <details class="raw">
+            <summary>Preview the first record</summary>
+            <pre class="json" id="recordPreview"></pre>
+          </details>
+
+          <h3 class="minor">Publish to Logos Storage</h3>
+          <p class="hint" style="margin-top:0">A browser page cannot reach your Logos node, so run these in the folder where the bundle was saved. The last line prints the content ID (CID).</p>
+          <div class="cmdwrap">
+            <pre class="cmd" id="publishCmd"></pre>
+            <button class="copy" type="button" data-copy="publishCmd">Copy</button>
+          </div>
+          <div class="field" style="margin-top:16px">
+            <label for="cidInput">Paste the CID your node returned</label>
+            <div class="inline">
+              <input type="text" id="cidInput" class="mono" autocomplete="off" spellcheck="false" placeholder="zDvZRwzm...">
+              <button class="btn ghost small" type="button" id="saveCidBtn">Save</button>
+            </div>
+            <p class="status" id="cidStatus" role="status"></p>
+          </div>
+          <div class="cid-out" id="cidOut" hidden></div>
+        </div>
+        <h3 class="minor">My contributions</h3>
+        <p class="hint" id="contribEmpty" style="margin-top:0">Bundles you publish and record here are listed on this device only.</p>
+        <ul class="contribs" id="contribList"></ul>
+      </div>
+    </section>
+
+    <section class="browse" id="browse" aria-labelledby="hbr">
+      <h2 id="hbr">The reference knowledge base</h2>
+      <p>The Pramana node has published a snapshot of 1,055 papers across seven topics: coffee and cardiovascular disease, diabetes, aging, caffeine mechanisms, repetitive negative thinking, AI and data center water, and urban simulation. Its content ID is</p>
+      <p><span class="cidline" id="refCid">zDvZRwzm1sq9mZA6qVdigHnzPFos7zbzH4QEukk3VLMjhZTxDnGB</span></p>
+      <p>Anyone running a Logos node can fetch it by that ID. If a single byte differs, the ID does not match.</p>
+      <div class="cmdwrap">
+        <pre class="cmd" id="fetchCmd">logosctl daemon start --detach
+logosctl call storage_module downloadToUrl "zDvZRwzm1sq9mZA6qVdigHnzPFos7zbzH4QEukk3VLMjhZTxDnGB" "$PWD/pramana_snapshot.json" false 65536 false false</pre>
+        <button class="copy" type="button" data-copy="fetchCmd">Copy</button>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>Pramana protocol, version pramana/0.1. Built at Field Station Rajasthan (Logos x Zu-Grama), October 2026. MIT licensed.</p>
+      <p>Paywalled papers are read from the abstract only. Extraction accuracy against human annotators has not yet been measured. Treat every record as a reading of a paper, to be checked against the quote it points to.</p>
+    </footer>
+  </main>
+</div>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

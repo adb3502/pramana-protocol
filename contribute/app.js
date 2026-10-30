@@ -6,7 +6,7 @@
 
   const PROTOCOL = "pramana/0.1";
   const APP_VERSION = "0.1.0";
-  const APP_URL = "https://adb3502.github.io/pramana-protocol/";
+  const APP_URL = "https://adb3502.github.io/pramana-protocol/contribute/";
   const DEMO = window.PRAMANA_DEMO;
   const TEXT_BUDGET = 60000;
   const STORE_KEYS = "pramana.keys.v1";
